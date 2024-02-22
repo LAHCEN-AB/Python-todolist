@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu</title>
+    <style>
+        /* Style CSS pour le menu */
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            background-color: #f1f1f1;
+            overflow: hidden;
+        }
+
+        li {
+            float: left;
+        }
+
+        li a {
+            display: block;
+            color: black;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+
+        li a:hover {
+            background-color: #ddd;
+        }
+
+        .active {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% if custom_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename=custom_css + '.css') }}">
+    {% endif %}
+    <title>{{ pagetitle }}</title>
+</head>
+<body>
+
+<ul>
+  <li><a class="active" href="current">Tâches en cours</a></li>
+  <li><a href="all">Toutes les tâches</a></li>
+  <li><a href="create">Nouvelle tâche</a></li>
+  <li><a href="employees">Gestion des employés</a></li>
+  <li><a href="creer_employe">Ajout d'un employé</a></li>
+</ul>
+<div>{{ custom_css }}</div>
+{% block body %} 
+{% endblock  %} 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="{{ url_for('static', filename='js/jquery-migrate-3.4.1.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

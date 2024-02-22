@@ -1,0 +1,28 @@
+{% include 'contentabove.html' %}
+<div>
+    <form method="post" >
+        <div class="mb-3"></div>
+            <label class="form-label" for="title">Titre</label>
+            <input class="form-control"  type="text" id="title" name="titre" value="{{ todo.titre }}">
+        </div>
+        <div class="mb-3"></div>
+            <label class="form-label" for="description">Description</label>
+            <input class="form-control"  type="text" id="description" name="description" value="{{ todo.description }}">
+        </div>
+        <div class="mb-3"></div>
+        <label class="form-label" for="statut">Statut</label>
+        
+        <select id="statut" name="statut">
+            <option value="non assignee">Non assignee</option>
+            <option value="en cours">En cours</option>
+            <option value="termine">Termine</option>
+        </select><br>
+    </div>
+        
+        
+        <div class="mb-3">
+            <button class="btn btn-primary btn-success" type="submit">Update</button>
+        </div>
+    </form>
+</div>
+{% include 'contentbelow.html' %}

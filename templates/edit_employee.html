@@ -1,0 +1,19 @@
+{% include 'contentabove.html' %}
+<h1>Edit Employee</h1>
+<form action="/edit_employee/{{ employee.email }}" method="POST">
+    <label for="prenom">Prénom:</label><br>
+    <input type="text" id="prenom" name="prenom" value="{{ employee.prenom }}"><br><br>
+
+    <label for="nom">Nom:</label><br>
+    <input type="text" id="nom" name="nom" value="{{ employee.nom }}"><br><br>
+
+    <label for="email">Email:</label><br>
+    <input type="email" id="email" name="email" value="{{ employee.email }}"><br><br>
+
+    <label for="icone">Icone:</label><br>
+    <input type="text" id="icone" name="icone" value="{{ employee.icone }}"><br><br>
+
+    <input type="submit" value="Submit">
+</form>
+
+{% include 'contentbelow.html' %}

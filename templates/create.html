@@ -1,0 +1,32 @@
+{% include 'contentabove.html' %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create a Task</title>
+</head>
+<body>
+    <h1>Create a Task</h1>
+    {% if confirmation_message %}
+    <div>{{ confirmation_message }}</div>
+    {% endif %}
+    <form method="post">
+        <label for="titre">Title:</label><br>
+        <input type="text" id="titre" name="titre"><br>
+        <label for="description">Description:</label><br>
+        <textarea id="description" name="description"></textarea><br>
+        <label for="statut">Status:</label><br>
+        <select id="statut" name="statut">
+            <option value="non assignee">Non assignee</option>
+            <option value="en cours">En cours</option>
+            <option value="termine">Termine</option>
+        </select><br>
+        <label for="employe">Employee:</label><br>
+        <input type="text" id="employe" name="employe"><br>
+        <button type="submit">Create Task</button>
+    </form>
+    {% include 'contentbelow.html' %}
+</body>
+</html>

@@ -1,0 +1,43 @@
+{% include 'contentabove.html' %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Employee</title>
+</head>
+<body>
+    <h1>Create Employee</h1>
+    <form action="{{ url_for('creer_employe') }}" method="POST">
+        <label for="prenom">First Name:</label><br>
+        <input type="text" id="prenom" name="prenom"><br>
+
+        <label for="nom">Last Name:</label><br>
+        <input type="text" id="nom" name="nom"><br>
+
+        <label for="email">Email:</label><br>
+        <input type="email" id="email" name="email"><br>
+
+        <label for="icone">Icon:</label><br>
+        <select id="icone" name="icone">
+            <option value="avatar1.png">Avatar 1</option>
+            <option value="avatar2.png">Avatar 2</option>
+            <option value="avatar3.png">Avatar 3</option>
+        </select><br><br>
+
+        <input type="submit" value="Submit">
+    </form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+  {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">
+      {{ message }}
+    </div>
+  {% endfor %}
+{% endif %}
+{% endwith %}
+
+</body>
+</html>
+{% include 'contentbelow.html' %}
