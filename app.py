@@ -59,13 +59,33 @@ def todosEditPOST(titre):
     return render_template('todosEdit.html', todo=todo)
 
 # Ecran 2 : Toutes les taches
-
 @app.route("/all")
 def all():
     todos = json.load(open(path))
     confirm_delete = True
     delete_route = "/current/delete/"
-    return render_template('all.html', todos=todos,confirm_delete=confirm_delete,delete_route=delete_route)
+    return render_template('all.html', todos=todos, confirm_delete=confirm_delete,delete_route=delete_route)
+# # Ecran 2 : Toutes les taches
+
+# @app.route("/all")
+# def all():
+#     todos = json.load(open(path))
+#     confirm_delete = True
+#     delete_route = "/all/delete/"
+#     return render_template('all.html', todos=todos,confirm_delete=confirm_delete,delete_route=delete_route)
+
+# @app.route("/all/delete/<titre>", methods=['GET'])
+# def emplyeeDelete(titre):
+#     print(titre)
+#     todos = json.load(open(path))
+    
+#     # on enleve l'element avec l'id id
+#     todos = list(filter(lambda x: x['titre'] != titre, todos))
+
+#     # on ecrase le fichier avec la liste filtree
+#     json.dump(todos, open(path, 'w'))
+
+#     return redirect('/all')
 
 @app.route("/export")
 def export_json():
@@ -199,7 +219,18 @@ def edit_employee(email):
 # Define the delete_employee endpoint
 @app.route('/delete_employee/<email>', methods=['GET'])
 def delete_employee(email):
-    # Logic to delete the employee with the given email
-    # This can include deleting associated tasks, etc.
-    return "Employee with email {} has been deleted.".format(email)
+    employes = json.load(open(path_employes))
+    for employee in employes:
+        if employee["email"] == email: 
+            employes.remove(employee)
+            json.dump(employes, open(path_employes, 'w'))
+            break
+    return redirect(url_for("confirm_delete", email=email))
+
+@app.route("/confirm_delete/<email>")
+def confirm_delete(email):
+    return render_template("confirm_delete.html", email=email)    
+    # # This can include deleting associated tasks, etc.
+    # return "Employee with email {} has been deleted.".format(email)
+    # return redirect("/employees")
 app.run(port=8080)

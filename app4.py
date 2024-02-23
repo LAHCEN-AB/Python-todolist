@@ -3,10 +3,15 @@ import json
 from flask import request
 
 app = Flask(__name__)
-app.secret_key = "super_secret_key"  # Set the secret key for flash messages
 
 path = "taches.json"
 path_employes = "employes.json"
+
+
+@app.route("/")
+def index():
+    return render_template('index.html')
+
 
 # Ecran 1: Taches en cours
 @app.route("/current")
@@ -14,56 +19,80 @@ def todosIndex():
     todos = json.load(open(path))
     statut_non = "non assignee"
     statut_current = "en cours"
-    todos_current = [todo for todo in todos if todo['statut'] == statut_current]
-    todos_non_assigne = [todo for todo in todos if todo['statut'] == statut_non]
+    todos_current = list(filter(lambda x: x['statut'] == statut_current, todos))
+    todos_non_assigne = list(filter(lambda x: x['statut'] == statut_non, todos))
     confirm_delete = True
+    delete_route = "/current/delete/"
+
     return render_template('current.html', todos_current=todos_current, todos_non_assigne=todos_non_assigne,
-                           confirm_delete=confirm_delete)
+                           confirm_delete=confirm_delete, delete_route=delete_route)
+
 
 @app.route("/current/delete/<titre>", methods=['GET'])
 def todosDelete(titre):
+    print(titre)
     todos = json.load(open(path))
-    todos = [todo for todo in todos if todo['titre'] != titre]
+
+    # on enleve l'element avec l'id id
+    todos = list(filter(lambda x: x['titre'] != titre, todos))
+
+    # on ecrase le fichier avec la liste filtree
     json.dump(todos, open(path, 'w'))
+
     return redirect('/current')
 
-@app.route("/current/edit/<titre>",  methods=['GET'])
+
+@app.route("/current/edit/<titre>", methods=['GET'])
 def todosEdit(titre):
     todos = json.load(open(path))
-    todo = next((t for t in todos if t['titre'] == titre), None)
+
+    # recupere le todo avec le titre
+    todo = list(filter(lambda x: x['titre'] == titre, todos))[0]
     return render_template('todosEdit.html', todo=todo)
+
 
 @app.route("/current/edit/<titre>", methods=['POST'])
 def todosEditPOST(titre):
     todos = json.load(open(path))
-    todo = next((t for t in todos if t['titre'] == titre), None)
-    if request.method == 'POST' and todo:
-        todo['titre'] = request.form['titre']
-        todo['description'] = request.form['description']
-        todo['statut'] = request.form['statut']
-        json.dump(todos, open(path, 'w'))
+    todo = list(filter(lambda x: x['titre'] == titre, todos))[0]
+    if request.method == 'POST':
+        if todo:
+            todo['titre'] = request.form['titre']
+            todo['description'] = request.form['description']
+            todo['statut'] = request.form['statut']
+            json.dump(todos, open(path, 'w'))
         return redirect('/current')
+    # If it's not a POST request, simply render the edit template again
     return render_template('todosEdit.html', todo=todo)
+
 
 # Ecran 2 : Toutes les taches
 @app.route("/all")
 def all():
     todos = json.load(open(path))
     confirm_delete = True
-    return render_template('all.html', todos=todos, confirm_delete=confirm_delete)
+    delete_route = "/all/delete/"
+    return render_template('all.html', todos=todos, confirm_delete=confirm_delete, delete_route=delete_route)
 
-@app.route("/export")
-def export_json():
+@app.route("/all/delete/<titre>", methods=['GET'])
+def todosDeleteall(titre):
+    print(titre)
     todos = json.load(open(path))
-    return jsonify(todos)
+
+    # on enleve l'element avec l'id id
+    todos = list(filter(lambda x: x['titre'] != titre, todos))
+
+    # on ecrase le fichier avec la liste filtree
+    json.dump(todos, open(path, 'w'))
+
+    return redirect('/all')
 
 # Ecran 3 : Creation d'une tache
 # Flask route for displaying the task creation form
 @app.route("/create", methods=['GET'])
 def createTaskForm():
-    # Load employee list for dropdown
-    employees = json.load(open(path_employes))
-    return render_template('create.html', employees=employees)
+    return render_template('create.html')
+
 
 # Flask route for handling the form submission
 @app.route("/create", methods=['POST'])
@@ -89,14 +118,17 @@ def createTask():
 
     # Render a confirmation message and clear the form fields
     confirmation_message = "Task '{}' created successfully.".format(titre)
-    flash(confirmation_message, "success")
-    return redirect('/create')
+    return render_template('create.html', confirmation_message=confirmation_message)
+
 
 # Ecran 5 : Lister les employes
 @app.route("/employees")
 def listEmployees():
-    employees = json.load(open(path_employes))  # Load employees from JSON file
-    return render_template("employees.html", employees=employees)
+    employes = json.load(open(path_employes))  # Load employees from JSON file
+    confirm_delete = True
+    delete_route = "/delete_employee/delete/"
+    return render_template("employees.html", employes=employes, confirm_delete=confirm_delete, delete_route=delete_route)
+
 
 # Flask route for exporting all employees as JSON
 @app.route("/employees/export")
@@ -104,22 +136,24 @@ def exportEmployees():
     employees = json.load(open(path_employes))  # Load employees from JSON file
     return jsonify(employees)
 
-# Ecran 6 : Cree un employee
-# Flask route for listing employees
 
-#  Route pour afficher le formulaire de création d'un employé
+# Ecran 6 : Cree un employee
+# Route pour afficher le formulaire de création d'un employé
 @app.route("/creer_employe", methods=["GET"])
 def creer_employe_form():
     employes = json.load(open(path_employes))
     return render_template("creer_employe.html")
+
 
 # Vérifier si l'email de l'employé est unique
 def is_email_unique(email):
     employes = json.load(open(path_employes))
     for employe in employes:
         if employe["email"] == email:
-         return False
+            return False
     return True
+
+
 # Route pour traiter la création d'un employé
 @app.route("/creer_employe", methods=["POST"])
 def creer_employe():
@@ -137,19 +171,20 @@ def creer_employe():
             flash("L'email doit être unique.", "error")
             return redirect("/creer_employe")
         else:
-        # Créer un nouvel employé
+            # Créer un nouvel employé
             nouvel_employe = {
-            "prenom": prenom,
-            "nom": nom,
-            "email": email,
-            "icone": icone
-        }
+                "prenom": prenom,
+                "nom": nom,
+                "email": email,
+                "icone": icone
+            }
             employes.append(nouvel_employe)
             json.dump(employes, open(path_employes, "w"))
             # Rediriger vers la liste des employés avec un message de confirmation
             flash("L'employé a été créé avec succès.", "success")
             return redirect("/employees")
     return render_template("employees.html", employes=employes)
+
 
 app.secret_key = "super_secret_key"  # Clé secrète pour les messages flash
 
@@ -184,21 +219,17 @@ def edit_employee(email):
     # Affichage du formulaire d'édition avec les données de l'employé
     return render_template("edit_employee.html", employee=employee_to_edit)
 
+
 # Define the delete_employee endpoint
 @app.route('/delete_employee/<email>', methods=['GET'])
 def delete_employee(email):
     employes = json.load(open(path_employes))
     for employee in employes:
-        if employee["email"] == email: 
+        if employee["email"] == email:
             employes.remove(employee)
             json.dump(employes, open(path_employes, 'w'))
             break
-    return redirect(url_for("confirm_delete", email=email))
+    # return redirect(url_for("confirm_delete", email=email))
+    return redirect("/employees")
 
-@app.route("/confirm_delete/<email>")
-def confirm_delete(email):
-    return render_template("confirm_delete.html", email=email)    
-    # # This can include deleting associated tasks, etc.
-    # return "Employee with email {} has been deleted.".format(email)
-    # return redirect("/employees")
 app.run(port=8080)
