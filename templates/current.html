@@ -1,6 +1,15 @@
 {% include 'contentabove.html' %}
 
 {% block body %} 
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flash-messages">
+      {% for message in messages %}
+        <li class="confirmation-message">{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
 
     <h1>Hello from current page</h1>
    

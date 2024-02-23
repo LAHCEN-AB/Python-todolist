@@ -10,7 +10,7 @@
 <body>
     <h1>Create a Task</h1>
     {% if confirmation_message %}
-    <div>{{ confirmation_message }}</div>
+    <div class="confirmation-message">{{ confirmation_message }}</div>
     {% endif %}
     <form method="post">
         <label for="titre">Title:</label><br>
@@ -24,7 +24,12 @@
             <option value="termine">Termine</option>
         </select><br>
         <label for="employe">Employee:</label><br>
-        <input type="text" id="employe" name="employe"><br>
+        <select id="employe" name="employe">
+            {% for employee in employees %}
+                <option value="{{ employee.email }}">{{ employee.nom }} {{ employee.prenom }}</option>
+            {% endfor %}
+        </select><br>
+
         <button type="submit">Create Task</button>
     </form>
     {% include 'contentbelow.html' %}
