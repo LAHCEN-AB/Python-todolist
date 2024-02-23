@@ -28,16 +28,17 @@
 
         <input type="submit" value="Submit">
     </form>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-  {% for category, message in messages %}
-    <div class="alert alert-{{ category }}">
-      {{ message }}
-    </div>
-  {% endfor %}
-{% endif %}
-{% endwith %}
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-message {% if category == 'error' %}error-message{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 </body>
 </html>
+
 {% include 'contentbelow.html' %}

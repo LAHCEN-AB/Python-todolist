@@ -126,7 +126,7 @@ def createTask():
 def listEmployees():
     employes = json.load(open(path_employes))  # Load employees from JSON file
     confirm_delete = True
-    delete_route = "/delete_employee/delete/"
+    delete_route = "/employees/delete/"
     return render_template("employees.html", employes=employes, confirm_delete=confirm_delete, delete_route=delete_route)
 
 
@@ -158,8 +158,9 @@ def is_email_unique(email):
 @app.route("/creer_employe", methods=["POST"])
 def creer_employe():
     # Ajouter l'employé à la liste des employés
-    employes = json.load(open(path_employes))
+    
     if request.method == "POST":
+        employes = json.load(open(path_employes))
         # Récupérer les données du formulaire
         prenom = request.form["prenom"]
         nom = request.form["nom"]
@@ -183,7 +184,8 @@ def creer_employe():
             # Rediriger vers la liste des employés avec un message de confirmation
             flash("L'employé a été créé avec succès.", "success")
             return redirect("/employees")
-    return render_template("employees.html", employes=employes)
+    # return render_template("employees.html", employes=employes)
+    return render_template("creer_employe.html")
 
 
 app.secret_key = "super_secret_key"  # Clé secrète pour les messages flash
@@ -221,7 +223,7 @@ def edit_employee(email):
 
 
 # Define the delete_employee endpoint
-@app.route('/delete_employee/<email>', methods=['GET'])
+@app.route('/employees/delete/<email>', methods=['GET'])
 def delete_employee(email):
     employes = json.load(open(path_employes))
     for employee in employes:

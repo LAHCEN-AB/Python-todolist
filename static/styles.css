@@ -50,4 +50,8 @@ H1
     text-decoration: none;
     opacity: .75;
   }
-  
+  .error-message {
+    color: red;
+    font-weight: bold;
+   
+}
