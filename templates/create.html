@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create a Task</title>
+  
 </head>
 <body>
     <h1>Create a Task</h1>
@@ -13,24 +14,36 @@
     <div class="confirmation-message">{{ confirmation_message }}</div>
     {% endif %}
     <form method="post">
-        <label for="titre">Title:</label><br>
-        <input type="text" id="titre" name="titre"><br>
-        <label for="description">Description:</label><br>
-        <textarea id="description" name="description"></textarea><br>
-        <label for="statut">Status:</label><br>
-        <select id="statut" name="statut">
-            <option value="non assignee">Non assignee</option>
-            <option value="en cours">En cours</option>
-            <option value="termine">Termine</option>
-        </select><br>
-        <label for="employe">Employee:</label><br>
-        <select id="employe" name="employe">
-            {% for employee in employees %}
-                <option value="{{ employee.email }}">{{ employee.nom }} {{ employee.prenom }}</option>
-            {% endfor %}
-        </select><br>
 
-        <button type="submit">Create Task</button>
+       <div class="mb-3">
+         <label class="form-label" for="titre">Title:</label><br>
+         <input class="form-text" type="text" id="titre" name="titre"><br>
+       </div>
+
+       <div class="mb-3">  
+         <label class="form-label" for="description">Description:</label><br>
+         <textarea class="form-text" id="description" name="description"></textarea><br>
+       </div>
+
+      <div class="mb-3">
+          <label class="form-label" for="statut">Status:</label><br>
+          <select class="form-text" id="statut" name="statut">
+              <option value="non assignee">Non assignee</option>
+              <option value="en cours">En cours</option>
+              <option value="termine">Termine</option>
+          </select><br>
+      </div>
+
+    <div class="mb-3">
+            <label class="form-label" for="employe">Employee:</label><br>
+            <select class="form-text" id="employe" name="employe">
+                {% for employee in employees %}
+                    <option value="{{ employee.email }}">{{ employee.nom }} {{ employee.prenom }}</option>
+                {% endfor %}
+            </select><br>
+    </div>
+
+        <button class="btn btn-primary btn1" type="submit">Create Task</button>
     </form>
     {% include 'contentbelow.html' %}
 </body>

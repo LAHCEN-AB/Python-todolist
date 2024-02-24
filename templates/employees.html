@@ -1,7 +1,7 @@
 {% include 'contentabove.html' %}
 {% block body %} 
 <h1>List of Employees</h1>
-<a href="{{ url_for('exportEmployees') }}">Export all employees as JSON</a>
+<a href="{{ url_for('exportEmployees') }}" class="export-link">Export all employees as JSON</a>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
@@ -13,7 +13,7 @@
   {% endif %}
 {% endwith %}
 
-<table class="table">
+<table class="table table-bordered table-striped table-hover">
     <thead>
         <tr>
             <th>First Name</th>
@@ -35,7 +35,7 @@
             <td><img src="static/icones/{{ employee.icone }}" alt="{{ employee.nom }}'s icon"></td>
             <td>{{ employee.tasks_in_progress}}</td>
             <td>{{ employee.total_tasks }}</td>
-            <td><a href="{{ url_for('edit_employee', email=employee.email) }}"><i class="bi bi-pencil"></i>Edit</a></td>
+            <td><a class="btn btn-primary btn-sm" href="{{ url_for('edit_employee', email=employee.email) }}"><i class="bi bi-pencil"></i>Edit</a></td>
             <td><a class="btn btn-danger btn-sm" href="#" onclick="confirmDelete('{{ employee.email }}','{{ delete_route }}')">Delete</a></td>
 
             

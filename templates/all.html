@@ -1,8 +1,9 @@
 {% include 'contentabove.html' %}
 {% block body %} 
-    <h1>All todos</h1>
-    <a href="{{ url_for('exportEmployees') }}">Export all todos as JSON</a>
-    <table class="table">
+    <h3>All todos</h3>
+    <a href="{{ url_for('exportEmployees') }}" class="export-link">Export all todos as JSON</a>
+
+    <table class="table table-bordered table-striped table-hover">
         <thead>
             <tr>
                 <th>Titre</th>

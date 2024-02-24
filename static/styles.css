@@ -59,3 +59,29 @@ H1
   background-color: #dff0d8; color: #3c763d; border-color: #d6e9c6; padding: 10px; margin-bottom: 10px;
   font-size: 1.25rem;
 }
+.highlight {
+  background-color: #ffffcc; /* Yellow background color */
+  /* Add any other styles you want to apply to highlighted rows */
+}
+.export-link {
+  color: red;
+  font-size: 20px;
+  text-align: left;
+  margin-bottom: 15px;
+  padding: 5px;
+}
+
+       /* Custom CSS styles */
+       .form-label {
+        width: 100px; /* Adjust the width as needed */
+        display: inline-block;
+    }
+    .form-text, textarea, select,.form-control {
+        width: 300px; /* Adjust the width as needed */
+        padding: 5px;
+    }
+    .btn {
+        width: 150px; /* Adjust the width as needed */
+        padding: 10px;
+        background-color: #34877c;
+    }

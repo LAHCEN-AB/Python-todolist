@@ -23,21 +23,21 @@
     </div>
     <div class="mb-3">
       <label class="form-label" for="statut">Statut</label>
-
       <select id="statut" name="statut">
-        <option value="non assignee">Non assignee</option>
-        <option value="en cours">En cours</option>
-        <option value="termine">Termine</option></select
-      ><br />
+        <option value="non assignee" {% if todo.statut == 'non assignee' %} selected {% endif %}>Non assignee</option>
+        <option value="en cours" {% if todo.statut == 'en cours' %} selected {% endif %}>En cours</option>
+        <option value="termine" {% if todo.statut == 'termine' %} selected {% endif %}>Termine</option>
+      </select><br />
     </div>
     <label for="employe">Employee:</label><br>
     <select id="employe" name="employe">
         {% for employee in employees %}
-            <option value="{{ employee.email }}">{{ employee.nom }} {{ employee.prenom }}</option>
+            <option value="{{ employee.email }}" {% if todo.employe.email == employee.email %} selected {% endif %}>
+              {{ employee.nom }} {{ employee.prenom }}
+            </option>
         {% endfor %}
     </select><br>
     
- 
     <div class="mb-3">
       <button class="btn btn-primary btn-success" type="submit">Update</button>
     </div>
