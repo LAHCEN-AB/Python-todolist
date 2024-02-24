@@ -134,33 +134,6 @@ def createTaskForm():
     employees = json.load(open("employes.json"))
     return render_template('create.html', employees=employees)
 
-
-# Flask route for handling the form submission
-# @app.route("/create", methods=['POST'])
-# def createTask():
-#     # Extract task details from the form data
-#     titre = request.form['titre']
-#     description = request.form['description']
-#     statut = request.form['statut']
-#     employe = request.form['employe']
-
-#     # Create a new task object
-#     new_task = {
-#         'titre': titre,
-#         'description': description,
-#         'statut': statut,
-#         'employe': employe
-#     }
-
-#     # Add the new task to the task list (JSON file)
-#     todos = json.load(open(path))
-#     todos.append(new_task)
-#     json.dump(todos, open(path, 'w'))
-
-#     # Render a confirmation message and clear the form fields
-#     confirmation_message = "Task '{}' created successfully.".format(titre)
-#     return render_template('create.html', confirmation_message=confirmation_message)
-
 @app.route("/create", methods=['POST'])
 def createTask():
     # Extract task details from the form data
@@ -200,20 +173,8 @@ def createTask():
     # Render a confirmation message
     confirmation_message = "Task '{}' created successfully.".format(titre)
     return render_template('create.html', confirmation_message=confirmation_message, employees=employees)
-# Ecran 5 : Lister les employes
-# @app.route("/employees")
-# def listEmployees():
-#     employes = json.load(open(path_employes))  # Load employees from JSON file
-    
-#      # Calculate statistics for each employee
-#     for employee in employes:
-#         email = employee['email']
-#         nombre_taches_en_cours, nombre_taches_total = calculer_statistiques_employe(email)
-        
-#     confirm_delete = True
-#     delete_route = "/employees/delete/"
-#     return render_template("employees.html", employes=employes, confirm_delete=confirm_delete, delete_route=delete_route,tasks_in_progress=nombre_taches_en_cours, total_tasks=nombre_taches_total)
 
+# Ecran 5 : Lister les employes
 @app.route("/employees")
 def listEmployees():
     employes = json.load(open(path_employes))  # Load employees from JSON file
@@ -313,9 +274,6 @@ def creer_employe():
     # return render_template("employees.html", employes=employes)
     return render_template("creer_employe.html")
 
-
-
-
 # Ecran 7 : Editer un employe
 
 @app.route("/edit_employee/<email>", methods=["GET", "POST"])
@@ -348,28 +306,70 @@ def edit_employee(email):
     return render_template("edit_employee.html", employee=employee_to_edit)
 
 
+# # Define the delete_employee endpoint
+# def delete_employee(email):
+#     todos = json.load(open(path))
+#     employe_tasks = [task for task in todos if task['employe']['email'] == email]
+#     if employe_tasks:
+#         # Check if the employee has tasks in the 'todo' status
+#         todo_tasks = [task for task in employe_tasks if task['statut'] == 'todo']
+#         if todo_tasks:
+#             # If there are 'todo' tasks, mark them as unassigned
+#             for task in todo_tasks:
+#                 task['employe'] = None  # Unassign the task
+#             json.dump(todos, open(path, 'w'), indent=4)  # Write back to the JSON file
+
+#     # Now delete the employee
+#     employes = json.load(open(path_employes))
+#     for employee in employes:
+#         if employee["email"] == email:
+#             employes.remove(employee)
+#             json.dump(employes, open(path_employes, 'w'))
+#             break
+
+#     return redirect("/employees")
+
 # Define the delete_employee endpoint
+# @app.route('/employees/delete/<email>', methods=['GET'])
+# def delete_employee(email):
+#     todos = json.load(open(path))
+#     employe_tasks = [task for task in todos if task['employe']['email'] == email]
+#     if employe_tasks:
+#         # Check if the employee has tasks in the 'todo' status
+#         todo_tasks = [task for task in employe_tasks if task['statut'] == 'todo']
+#         if todo_tasks:
+#             # If there are 'todo' tasks, mark them as unassigned
+#             for task in todo_tasks:
+#                 task['employe'] = None  # Unassign the task
+#             json.dump(todos, open(path, 'w'), indent=4)  # Write back to the JSON file
+
+#     # Now delete the employee
+#     employes = json.load(open(path_employes))
+#     for employee in employes:
+#         if employee["email"] == email:
+#             employes.remove(employee)
+#             json.dump(employes, open(path_employes, 'w'))
+#             break
+#     return redirect(url_for("confirm_delete", email=email))
+
+#     # return redirect("/employees")
+# app.run(port=8080)
+@app.route('/employees/delete/<email>', methods=['GET'])
 def delete_employee(email):
     todos = json.load(open(path))
-    employe_tasks = [task for task in todos if task['employe']['email'] == email]
+    employe_tasks = [task for task in todos if task.get('employe') and task['employe'].get('email') == email]
     if employe_tasks:
-        # Check if the employee has tasks in the 'todo' status
         todo_tasks = [task for task in employe_tasks if task['statut'] == 'todo']
         if todo_tasks:
-            # If there are 'todo' tasks, mark them as unassigned
             for task in todo_tasks:
-                task['employe'] = None  # Unassign the task
-            json.dump(todos, open(path, 'w'), indent=4)  # Write back to the JSON file
+                task['employe'] = None
+            json.dump(todos, open(path, 'w'), indent=4)
 
-    # Now delete the employee
     employes = json.load(open(path_employes))
-    for employee in employes:
-        if employee["email"] == email:
-            employes.remove(employee)
-            json.dump(employes, open(path_employes, 'w'))
-            break
-
+    employes = [employee for employee in employes if employee["email"] != email]
+    json.dump(employes, open(path_employes, 'w'))
+    
+    flash("Employee '{}' deleted successfully.".format(email), "success")
     return redirect("/employees")
-
 
 app.run(port=8080)
