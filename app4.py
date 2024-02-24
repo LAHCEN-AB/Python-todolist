@@ -61,25 +61,84 @@ def todosEdit(titre):
     
 
 
+# @app.route("/current/edit/<titre>", methods=['POST'])
+# def todosEditPOST(titre):
+#     todos = json.load(open(path))
+#     # Load employees from JSON file
+#     employees = json.load(open(path_employes))
+#     todo = list(filter(lambda x: x['titre'] == titre, todos))[0]
+    
+#     # Get the selected employee's email from the form
+#     employe_email = request.form['employe']
+    
+#     # Find the selected employee in the employees list
+#     selected_employee = None
+#     for employee in employees:
+#         if employee['email'] == employe_email:
+#             selected_employee = employee
+#             break
+    
+#     if request.method == 'POST':
+#         # Check if the selected employee already has 3 tasks in progress
+#         tasks_in_progress_count = sum(1 for task in todos if task['employe']['email'] == employe_email and task['statut'] == 'en cours')
+#         if tasks_in_progress_count >= 3:
+#             flash("Employee '{}' already has 3 tasks in progress. Cannot assign more tasks.".format(selected_employee['nom']), "error")
+#             return redirect('/current')
+        
+#         if todo:
+#             todo['titre'] = request.form['titre']
+#             todo['description'] = request.form['description']
+#             todo['statut'] = request.form['statut']
+#             todo['employe'] = selected_employee  # Update the task's employee details
+#             json.dump(todos, open(path, 'w'), indent=4)  # Ensure proper indentation
+#             flash("Task '{}' updated successfully.".format(todo['titre']), "success")  # Flash the success message
+#             return redirect('/current')
+    
+#     # If it's not a POST request or if there's an issue, render the edit template again with the todo data
+#     return render_template('todosEdit.html', todo=todo, employees=employees)
+
 @app.route("/current/edit/<titre>", methods=['POST'])
 def todosEditPOST(titre):
+    # Load todos and employees from JSON files
     todos = json.load(open(path))
-    todo = list(filter(lambda x: x['titre'] == titre, todos))[0]
-    
-    # Get the selected employee's email from the form
-    employe_email = request.form['employe']
-    
-    # Load employees data
     employees = json.load(open(path_employes))
+    tasks_in_progress_count = 0
+    # Get the selected todo by its title
+    todo = next((task for task in todos if task['titre'] == titre), None)
     
-    # Find the selected employee in the employees list
-    selected_employee = None
-    for employee in employees:
-        if employee['email'] == employe_email:
-            selected_employee = employee
-            break
-    
+    # Check if the request method is POST
     if request.method == 'POST':
+        # Get the selected employee's email from the form
+        employe_email = request.form['employe']
+        
+        # Find the selected employee in the employees list
+        selected_employee = next((employee for employee in employees if employee['email'] == employe_email), None)
+        
+        # Check if the selected employee exists
+        if not selected_employee:
+            flash("Selected employee not found.", "error")
+            return redirect('/current')
+
+        # Check if the selected employee already has 3 tasks in progress
+        # tasks_in_progress_count = sum(1 for task in todos if task.get('employe') and task['employe']['email'] == employe_email and task['statut'] == 'en cours')
+        # tasks_in_progress_count = sum(1 for task in todos if task.get('employe') and task['employe'].get('email') == employe_email and task['statut'] == 'en cours')
+        # tasks_in_progress_count = sum(1 for task in todos if task and task.get('employe') and task['employe'].get('email') == employe_email and task['statut'] == 'en cours')
+        # tasks_in_progress_count = sum(1 for task in todos if task and task.get('employe') and task['employe'].get('email') == employe_email and task.get('statut') == 'en cours')
+        # tasks_in_progress_count = sum(1 for task in todos if task and task.get('employe') and task['employe'].get('email') == employe_email and task.get('statut') == 'en cours')
+        # tasks_in_progress_count = sum(1 for task in todos if task and task.get('employe') and task['employe'].get('email') == employe_email and task.get('statut') == 'en cours')
+        # tasks_in_progress_count = sum(1 for task in todos if task and task.get('employe') and task['employe'].get('email') == employe_email and task.get('statut') == 'en cours')
+          # Iterate through the todos and conditionally update the count
+    for task in todos:
+        if task.get('employe') and task['employe'].get('email'):
+            if task['employe']['email'] == employe_email and task['statut'] == 'en cours':
+                tasks_in_progress_count += 1
+
+
+        if tasks_in_progress_count >= 3:
+            flash("Employee '{}' already has 3 tasks in progress. Cannot assign more tasks.".format(selected_employee['nom']), "error")
+            return redirect('/current')
+        
+        # Update the task if it exists
         if todo:
             todo['titre'] = request.form['titre']
             todo['description'] = request.form['description']
@@ -91,6 +150,7 @@ def todosEditPOST(titre):
     
     # If it's not a POST request or if there's an issue, render the edit template again with the todo data
     return render_template('todosEdit.html', todo=todo, employees=employees)
+
 
 
 
@@ -267,7 +327,7 @@ def is_email_unique(email):
             return False
     return True
 
-
+app.secret_key = "super_secret_key"  # Clé secrète pour les messages flash
 # Route pour traiter la création d'un employé
 @app.route("/creer_employe", methods=["POST"])
 def creer_employe():
@@ -302,7 +362,7 @@ def creer_employe():
     return render_template("creer_employe.html")
 
 
-app.secret_key = "super_secret_key"  # Clé secrète pour les messages flash
+
 
 # Ecran 7 : Editer un employe
 
@@ -337,15 +397,27 @@ def edit_employee(email):
 
 
 # Define the delete_employee endpoint
-@app.route('/employees/delete/<email>', methods=['GET'])
 def delete_employee(email):
+    todos = json.load(open(path))
+    employe_tasks = [task for task in todos if task['employe']['email'] == email]
+    if employe_tasks:
+        # Check if the employee has tasks in the 'todo' status
+        todo_tasks = [task for task in employe_tasks if task['statut'] == 'todo']
+        if todo_tasks:
+            # If there are 'todo' tasks, mark them as unassigned
+            for task in todo_tasks:
+                task['employe'] = None  # Unassign the task
+            json.dump(todos, open(path, 'w'), indent=4)  # Write back to the JSON file
+
+    # Now delete the employee
     employes = json.load(open(path_employes))
     for employee in employes:
         if employee["email"] == email:
             employes.remove(employee)
             json.dump(employes, open(path_employes, 'w'))
             break
-    # return redirect(url_for("confirm_delete", email=email))
+
     return redirect("/employees")
+
 
 app.run(port=8080)

@@ -11,13 +11,13 @@
     <h1>Create Employee</h1>
     <form action="{{ url_for('creer_employe') }}" method="POST">
         <label for="prenom">First Name:</label><br>
-        <input type="text" id="prenom" name="prenom"><br>
+        <input type="text" id="prenom" name="prenom" Required><br>
 
         <label for="nom">Last Name:</label><br>
-        <input type="text" id="nom" name="nom"><br>
+        <input type="text" id="nom" name="nom" Required><br>
 
         <label for="email">Email:</label><br>
-        <input type="email" id="email" name="email"><br>
+        <input type="email" id="email" name="email" Required><br>
 
         <label for="icone">Icon:</label><br>
         <select id="icone" name="icone">
@@ -30,13 +30,13 @@
     </form>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="flash-message {% if category == 'error' %}error-message{% endif %}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      {% endif %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash-message confirmation-message {% if category == 'error' %}error-message{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
     {% endwith %}
 </body>
 </html>
