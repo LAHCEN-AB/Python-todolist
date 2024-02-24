@@ -47,9 +47,7 @@ def todosEdit(titre):
     todos = json.load(open(path))
  # Load employees data
     employees = json.load(open(path_employes))
-    # recupere le todo avec le titre
-    # todo = list(filter(lambda x: x['titre'] == titre, todos))[0]
-    
+   
     filtered_todos = list(filter(lambda x: x['titre'] == titre, todos))
     if filtered_todos:
         todo = filtered_todos[0]
@@ -59,8 +57,6 @@ def todosEdit(titre):
         flash("Task with title '{}' not found.".format(titre), "error")
         return redirect('/current')  # Redirect to the current page or another relevant page
     
-
-
 @app.route("/current/edit/<titre>", methods=['POST'])
 def todosEditPOST(titre):
     # Load todos and employees from JSON files
@@ -102,9 +98,6 @@ def todosEditPOST(titre):
     
     # If it's not a POST request or if there's an issue, render the edit template again with the todo data
     return render_template('todosEdit.html', todo=todo, employees=employees)
-
-
-
 
 # Ecran 2 : Toutes les taches
 @app.route("/all")
@@ -223,7 +216,6 @@ def calculer_statistiques_employe(email):
             nombre_taches_total += 1
     return nombre_taches_en_cours, nombre_taches_total
 
-
 # Ecran 6 : Cree un employee
 # Route pour afficher le formulaire de création d'un employé
 @app.route("/creer_employe", methods=["GET"])
@@ -299,61 +291,12 @@ def edit_employee(email):
 
         # Redirection vers l'écran de listing des employés avec un message de confirmation
         # return redirect("/list_employees?message=employees+updated+successfully")
-        return redirect("/employees")
+        flash("Employee '{}' updated successfully.".format(email), "success")
+        return redirect("/employees")  # Redirection vers l'écran de listing des employés
     # return render_template("employees.html", employes=employes)
-
     # Affichage du formulaire d'édition avec les données de l'employé
     return render_template("edit_employee.html", employee=employee_to_edit)
 
-
-# # Define the delete_employee endpoint
-# def delete_employee(email):
-#     todos = json.load(open(path))
-#     employe_tasks = [task for task in todos if task['employe']['email'] == email]
-#     if employe_tasks:
-#         # Check if the employee has tasks in the 'todo' status
-#         todo_tasks = [task for task in employe_tasks if task['statut'] == 'todo']
-#         if todo_tasks:
-#             # If there are 'todo' tasks, mark them as unassigned
-#             for task in todo_tasks:
-#                 task['employe'] = None  # Unassign the task
-#             json.dump(todos, open(path, 'w'), indent=4)  # Write back to the JSON file
-
-#     # Now delete the employee
-#     employes = json.load(open(path_employes))
-#     for employee in employes:
-#         if employee["email"] == email:
-#             employes.remove(employee)
-#             json.dump(employes, open(path_employes, 'w'))
-#             break
-
-#     return redirect("/employees")
-
-# Define the delete_employee endpoint
-# @app.route('/employees/delete/<email>', methods=['GET'])
-# def delete_employee(email):
-#     todos = json.load(open(path))
-#     employe_tasks = [task for task in todos if task['employe']['email'] == email]
-#     if employe_tasks:
-#         # Check if the employee has tasks in the 'todo' status
-#         todo_tasks = [task for task in employe_tasks if task['statut'] == 'todo']
-#         if todo_tasks:
-#             # If there are 'todo' tasks, mark them as unassigned
-#             for task in todo_tasks:
-#                 task['employe'] = None  # Unassign the task
-#             json.dump(todos, open(path, 'w'), indent=4)  # Write back to the JSON file
-
-#     # Now delete the employee
-#     employes = json.load(open(path_employes))
-#     for employee in employes:
-#         if employee["email"] == email:
-#             employes.remove(employee)
-#             json.dump(employes, open(path_employes, 'w'))
-#             break
-#     return redirect(url_for("confirm_delete", email=email))
-
-#     # return redirect("/employees")
-# app.run(port=8080)
 @app.route('/employees/delete/<email>', methods=['GET'])
 def delete_employee(email):
     todos = json.load(open(path))
