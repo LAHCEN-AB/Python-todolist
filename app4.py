@@ -78,11 +78,14 @@ def todosEditPOST(titre):
         if not selected_employee:
             flash("Selected employee not found.", "error")
             return redirect('/current')
+    # Count the number of tasks in progress for the selected employee    
     for task in todos:
         if task.get('employe') and task['employe'].get('email'):
             if task['employe']['email'] == employe_email and task['statut'] == 'en cours':
                 tasks_in_progress_count += 1
-        if tasks_in_progress_count >= 3:
+    # Limit the number of tasks in progress to 3 for each employee           
+     # Check if the employee has exceeded the task limit
+        if has_exceeded_task_limit(employe_email):
             flash("Employee '{}' already has 3 tasks in progress. Cannot assign more tasks.".format(selected_employee['nom']), "error")
             return redirect('/current')
         
@@ -121,6 +124,16 @@ def todosDeleteall(titre):
     return redirect('/all')
 
 # Ecran 3 : Creation d'une tache
+#Check if an employee has exceeded the limit of 3 tasks in progress
+def has_exceeded_task_limit(employe_email):
+    # Load existing tasks from JSON file
+    tasks = json.load(open("taches.json"))
+
+    # Count the number of tasks in progress for the selected employee
+    tasks_in_progress_count = sum(1 for task in tasks if task.get('employe') and task['employe'].get('email') == employe_email and task['statut'] == 'en cours')
+
+    return tasks_in_progress_count >= 3
+
 # Flask route for displaying the task creation form
 @app.route("/create", methods=['GET'])
 def createTaskForm():
@@ -144,6 +157,11 @@ def createTask():
         if employee['email'] == employe_email:
             selected_employee = employee
             break
+ # Check if the employee has exceeded the task limit
+    if has_exceeded_task_limit(employe_email):
+        error_message = "Employee '{}' already has 3 tasks in progress. Cannot assign more tasks.".format(selected_employee['nom'])
+        flash(error_message, "error")
+        return render_template('create.html', employees=employees, confirmation_message=error_message)
 
     # Create a new task object
     new_task = {
@@ -301,13 +319,18 @@ def edit_employee(email):
 def delete_employee(email):
     todos = json.load(open(path))
     employe_tasks = [task for task in todos if task.get('employe') and task['employe'].get('email') == email]
+    # Check if there are tasks assigned to the employee
     if employe_tasks:
-        todo_tasks = [task for task in employe_tasks if task['statut'] == 'todo']
+        todo_tasks = [task for task in employe_tasks if task['statut'] == 'en cours']
+        if todo_tasks:
+            flash("Cannot delete employee '{}' because they have tasks in progress.".format(email), "error")
+            return redirect("/employees")
+        # If there are 'todo' tasks, unassign them
         if todo_tasks:
             for task in todo_tasks:
                 task['employe'] = None
             json.dump(todos, open(path, 'w'), indent=4)
-
+    # Remove the employee from the list of employees
     employes = json.load(open(path_employes))
     employes = [employee for employee in employes if employee["email"] != email]
     json.dump(employes, open(path_employes, 'w'))
