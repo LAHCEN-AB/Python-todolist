@@ -40,5 +40,18 @@
         "prenom": "edmon",
         "email": "rambo@hotmail.com",
         "icone": "avatar3.png"
-    }
+    },
+    {
+        "nom": "dimon",
+        "prenom": "rabi3",
+        "email": "dimon@gmail.com",
+        "icone": "avatar1.png"
+    },
+    
+{
+    "nom": "NEW ONE",
+    "prenom": "EMP1",
+    "email": "emp1@gmail.com",
+    "icone": "avatar1.png"
+}
 ]
