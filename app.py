@@ -1,32 +1,38 @@
-from flask import Flask, redirect, render_template,url_for, jsonify, flash
+from flask import Flask, redirect, render_template, url_for, jsonify, flash
 import json
 from flask import request
+
 app = Flask(__name__)
 
-path="taches.json"
+path = "taches.json"
 path_employes = "employes.json"
+
+
 @app.route("/")
 def index():
     return render_template('index.html')
+
 
 # Ecran 1: Taches en cours
 @app.route("/current")
 def todosIndex():
     todos = json.load(open(path))
-    statut_non="non assignee"
-    statut_current="en cours"
+    statut_non = "non assignee"
+    statut_current = "en cours"
     todos_current = list(filter(lambda x: x['statut'] == statut_current, todos))
     todos_non_assigne = list(filter(lambda x: x['statut'] == statut_non, todos))
     confirm_delete = True
     delete_route = "/current/delete/"
-    
-    return render_template('current.html', todos_current=todos_current,todos_non_assigne=todos_non_assigne,confirm_delete=confirm_delete,delete_route=delete_route)
+
+    return render_template('current.html', todos_current=todos_current, todos_non_assigne=todos_non_assigne,
+                           confirm_delete=confirm_delete, delete_route=delete_route)
+
 
 @app.route("/current/delete/<titre>", methods=['GET'])
 def todosDelete(titre):
     print(titre)
     todos = json.load(open(path))
-    
+
     # on enleve l'element avec l'id id
     todos = list(filter(lambda x: x['titre'] != titre, todos))
 
@@ -35,129 +41,221 @@ def todosDelete(titre):
 
     return redirect('/current')
 
-@app.route("/current/edit/<titre>",  methods=['GET'])
+
+@app.route("/current/edit/<titre>", methods=['GET'])
 def todosEdit(titre):
     todos = json.load(open(path))
-    
-    # recupere le todo avec le titre
-    todo = list(filter(lambda x: x['titre'] == titre, todos))[0]
-    return render_template('todosEdit.html', todo = todo)
-    
+ # Load employees data
+    employees = json.load(open(path_employes))
+   
+    filtered_todos = list(filter(lambda x: x['titre'] == titre, todos))
+    if filtered_todos:
+        todo = filtered_todos[0]
+        return render_template('todosEdit.html', todo=todo, employees=employees)
+    else:
+        # Gérer le cas où aucune tâche correspondante n'est trouvée.
+        flash("Task with title '{}' not found.".format(titre), "error")
+        return redirect('/current')  # Rediriger vers la page actuelle ou une autre page pertinente
     
 @app.route("/current/edit/<titre>", methods=['POST'])
 def todosEditPOST(titre):
+    # Charger les tâches et les employés à partir de fichiers JSON
     todos = json.load(open(path))
-    todo = list(filter(lambda x: x['titre'] == titre, todos))[0]
+    employees = json.load(open(path_employes))
+    tasks_in_progress_count = 0
+    # Obtenir la tâche sélectionnée par son titre
+    todo = next((task for task in todos if task['titre'] == titre), None)
+    
+    # Vérifier si la méthode de la requête est POST
     if request.method == 'POST':
+        # Obtenir l'email de l'employé sélectionné à partir du formulaire
+        employe_email = request.form['employe']
+        
+        # Trouver l'employé sélectionné dans la liste des employés
+        selected_employee = next((employee for employee in employees if employee['email'] == employe_email), None)
+        
+        # Vérifier si l'employé sélectionné existe
+        if not selected_employee:
+            flash("Selected employee not found.", "error")
+            return redirect('/current')
+    # Compter le nombre de tâches en cours pour l'employé sélectionné   
+    for task in todos:
+        if task.get('employe') and task['employe'].get('email'):
+            if task['employe']['email'] == employe_email and task['statut'] == 'en cours':
+                tasks_in_progress_count += 1
+    # Limit the number of tasks in progress to 3 for each employee           
+     # Vérifier si l'employé a dépassé la limite de tâches
+        if has_exceeded_task_limit(employe_email):
+            flash("Employee '{}' already has 3 tasks in progress. Cannot assign more tasks.".format(selected_employee['nom']), "error")
+            return redirect('/current')
+        
+        # Mettre à jour la tâche si elle existe
         if todo:
             todo['titre'] = request.form['titre']
             todo['description'] = request.form['description']
             todo['statut'] = request.form['statut']
-            json.dump(todos, open(path, 'w'))
-        return redirect('/current')
-    # If it's not a POST request, simply render the edit template again
-    return render_template('todosEdit.html', todo=todo)
+            todo['employe'] = selected_employee  # Mettre à jour les détails de l'employé assigné à la tâche
+            json.dump(todos, open(path, 'w'), indent=4)  
+            flash("Task '{}' updated successfully.".format(todo['titre']), "success")  # Afficher le message de réussite (flash message).
+            return redirect('/current')
+    
+    # Si ce n'est pas une requête POST ou s'il y a un problème
+    # affichez à nouveau le modèle d'édition avec les données de la tâche
+    return render_template('todosEdit.html', todo=todo, employees=employees)
 
 # Ecran 2 : Toutes les taches
 @app.route("/all")
 def all():
     todos = json.load(open(path))
     confirm_delete = True
-    delete_route = "/current/delete/"
-    return render_template('all.html', todos=todos, confirm_delete=confirm_delete,delete_route=delete_route)
-# # Ecran 2 : Toutes les taches
+    delete_route = "/all/delete/"
+    return render_template('all.html', todos=todos, confirm_delete=confirm_delete, delete_route=delete_route)
 
-# @app.route("/all")
-# def all():
-#     todos = json.load(open(path))
-#     confirm_delete = True
-#     delete_route = "/all/delete/"
-#     return render_template('all.html', todos=todos,confirm_delete=confirm_delete,delete_route=delete_route)
+@app.route("/all/delete/<titre>", methods=['GET'])
+def todosDeleteall(titre):
+    print(titre)
+    todos = json.load(open(path))
 
-# @app.route("/all/delete/<titre>", methods=['GET'])
-# def emplyeeDelete(titre):
-#     print(titre)
-#     todos = json.load(open(path))
-    
-#     # on enleve l'element avec l'id id
-#     todos = list(filter(lambda x: x['titre'] != titre, todos))
+    # on enleve l'element avec l'id id
+    todos = list(filter(lambda x: x['titre'] != titre, todos))
 
-#     # on ecrase le fichier avec la liste filtree
-#     json.dump(todos, open(path, 'w'))
+    # on ecrase le fichier avec la liste filtree
+    json.dump(todos, open(path, 'w'))
 
-#     return redirect('/all')
-
-@app.route("/export")
-def export_json():
-    todos =json.load(open(path))
-    return jsonify(todos)
+    return redirect('/all')
 
 # Ecran 3 : Creation d'une tache
-# Flask route for displaying the task creation form
+#Vérifier si un employé a dépassé la limite de 3 tâches en cours
+def has_exceeded_task_limit(employe_email):
+    # Charger les tâches existantes à partir du fichier JSON
+    tasks = json.load(open("taches.json"))
+
+    # Compter le nombre de tâches en cours pour l'employé sélectionné
+    tasks_in_progress_count = sum(1 for task in tasks if task.get('employe') and task['employe'].get('email') == employe_email and task['statut'] == 'en cours')
+
+    return tasks_in_progress_count >= 3
+
+# Route Flask pour afficher le formulaire de création de tâche
 @app.route("/create", methods=['GET'])
 def createTaskForm():
-    return render_template('create.html')
+    employees = json.load(open("employes.json"))
+    return render_template('create.html', employees=employees)
 
-# Flask route for handling the form submission
 @app.route("/create", methods=['POST'])
 def createTask():
-    # Extract task details from the form data
+    # Extraire les détails de la tâche à partir des données du formulaire.
     titre = request.form['titre']
     description = request.form['description']
     statut = request.form['statut']
-    employe = request.form['employe']
+    employe_email = request.form['employe']  # Get the selected employee's email from the form
     
-    # Create a new task object
+    # Charger les employés à partir du fichier JSON
+    employees = json.load(open("employes.json"))
+
+    # Trouver l'employé sélectionné dans la liste des employés
+    selected_employee = None
+    for employee in employees:
+        if employee['email'] == employe_email:
+            selected_employee = employee
+            break
+ # Vérifier si l'employé a dépassé la limite de tâches
+    if has_exceeded_task_limit(employe_email):
+        error_message = "Employee '{}' already has 3 tasks in progress. Cannot assign more tasks.".format(selected_employee['nom'])
+        flash(error_message, "error")
+        return render_template('create.html', employees=employees, confirmation_message=error_message)
+
+    # Créer un nouvel objet tâche
     new_task = {
         'titre': titre,
         'description': description,
         'statut': statut,
-        'employe': employe
+        'employe': selected_employee  # Attribuer les détails de l'employé sélectionné à la clé 'employe'
     }
-    
-    # Add the new task to the task list (JSON file)
-    todos = json.load(open(path))
-    todos.append(new_task)
-    json.dump(todos, open(path, 'w'))
-    
-    # Render a confirmation message and clear the form fields
-    confirmation_message = "Task '{}' created successfully.".format(titre)
-    return render_template('create.html', confirmation_message=confirmation_message)
 
-# Ecran 5 : Lister les employes 
+    tasks = json.load(open("taches.json"))
+    
+    # Ajouter la nouvelle tâche à la liste des tâches
+    tasks.append(new_task)
+
+    # Écrire la liste des tâches mise à jour dans le fichier JSON
+    with open('taches.json', 'w') as f:
+        json.dump(tasks, f, indent=4)
+
+    # Afficher un message de confirmation
+    confirmation_message = "Task '{}' created successfully.".format(titre)
+    return render_template('create.html', confirmation_message=confirmation_message, employees=employees)
+
+# Ecran 5 : Lister les employes
 @app.route("/employees")
 def listEmployees():
-    employes = json.load(open(path_employes))  # Load employees from JSON file
+    employes = json.load(open(path_employes))  
     confirm_delete = True
-    return render_template("employees.html", employes=employes,confirm_delete=confirm_delete)
+    delete_route = "/employees/delete/"
+    tasks = json.load(open(path))
+    
+    employees_with_stats = []
+    for employee in employes:
+        email = employee['email']
+        
+        # Initialiser le nombre total de tâches et le nombre de tâches en cours pour chaque employé
+        total_tasks = 0
+        tasks_in_progress = 0
+        
+        # Calculer le nombre total de tâches et le nombre de tâches en cours pour l'employé
+        for task in tasks:
+            if isinstance(task['employe'], dict) and task['employe']['email'] == email:
+                total_tasks += 1
+                if task['statut'] == 'en cours':
+                    tasks_in_progress += 1
+        
+        # Ajouter les statistiques calculées au dictionnaire de l'employé
+        employee['total_tasks'] = total_tasks
+        employee['tasks_in_progress'] = tasks_in_progress
+        employees_with_stats.append(employee)
+        
+    return render_template("employees.html", employes=employees_with_stats, confirm_delete=confirm_delete, delete_route=delete_route)
 
-# Flask route for exporting all employees as JSON
+# Route Flask pour exporter tous les employés au format JSON 
 @app.route("/employees/export")
 def exportEmployees():
-    employees = json.load(open(path_employes ))  # Load employees from JSON file
+    employees = json.load(open(path_employes))  
     return jsonify(employees)
-# Ecran 6 : Cree un employee
-# Flask route for listing employees
+# fontion de statistique de nombre taches
+def calculer_statistiques_employe(email):
+    todos = json.load(open(path))
+    nombre_taches_en_cours = 0
+    nombre_taches_total = 0
+    for todo in todos:
+        if todo['employe'] and todo['employe']['email'] == email:
+            if todo['statut'] == 'en cours':
+                nombre_taches_en_cours += 1
+            nombre_taches_total += 1
+    return nombre_taches_en_cours, nombre_taches_total
 
-#  Route pour afficher le formulaire de création d'un employé
+# Ecran 6 : Cree un employee
+# Route pour afficher le formulaire de création d'un employé
 @app.route("/creer_employe", methods=["GET"])
 def creer_employe_form():
     employes = json.load(open(path_employes))
     return render_template("creer_employe.html")
+
 
 # Vérifier si l'email de l'employé est unique
 def is_email_unique(email):
     employes = json.load(open(path_employes))
     for employe in employes:
         if employe["email"] == email:
-         return False
+            return False
     return True
+
+app.secret_key = "super_secret_key"  # Clé secrète pour les messages flash
 # Route pour traiter la création d'un employé
 @app.route("/creer_employe", methods=["POST"])
 def creer_employe():
     # Ajouter l'employé à la liste des employés
-    employes = json.load(open(path_employes))
+    
     if request.method == "POST":
+        employes = json.load(open(path_employes))
         # Récupérer les données du formulaire
         prenom = request.form["prenom"]
         nom = request.form["nom"]
@@ -169,21 +267,20 @@ def creer_employe():
             flash("L'email doit être unique.", "error")
             return redirect("/creer_employe")
         else:
-        # Créer un nouvel employé
+            # Créer un nouvel employé
             nouvel_employe = {
-            "prenom": prenom,
-            "nom": nom,
-            "email": email,
-            "icone": icone
-        }
+                "nom": nom,
+                "prenom": prenom,
+                "email": email,
+                "icone": icone
+            }
             employes.append(nouvel_employe)
             json.dump(employes, open(path_employes, "w"))
             # Rediriger vers la liste des employés avec un message de confirmation
             flash("L'employé a été créé avec succès.", "success")
             return redirect("/employees")
-    return render_template("employees.html", employes=employes)
-
-app.secret_key = "super_secret_key"  # Clé secrète pour les messages flash
+    # return render_template("employees.html", employes=employes)
+    return render_template("creer_employe.html")
 
 # Ecran 7 : Editer un employe
 
@@ -209,28 +306,32 @@ def edit_employee(email):
             json.dump(employes, f, indent=4)
 
         # Redirection vers l'écran de listing des employés avec un message de confirmation
-        # return redirect("/list_employees?message=employees+updated+successfully")
-        return redirect("/employees")
-    # return render_template("employees.html", employes=employes)
-
+        flash("Employee '{}' updated successfully.".format(email), "success")
+        return redirect("/employees")  # Redirection vers l'écran de listing des employés
     # Affichage du formulaire d'édition avec les données de l'employé
     return render_template("edit_employee.html", employee=employee_to_edit)
 
-# Define the delete_employee endpoint
-@app.route('/delete_employee/<email>', methods=['GET'])
+@app.route('/employees/delete/<email>', methods=['GET'])
 def delete_employee(email):
+    todos = json.load(open(path))
+    employe_tasks = [task for task in todos if task.get('employe') and task['employe'].get('email') == email]
+    # Vérifier s'il y a des tâches assignées à l'employé
+    if employe_tasks:
+        todo_tasks = [task for task in employe_tasks if task['statut'] == 'en cours']
+        if todo_tasks:
+            flash("Cannot delete employee '{}' because they have tasks in progress.".format(email), "error")
+            return redirect("/employees")
+        # S'il y a des tâches "en cours" assignées, les désassigner.
+        if todo_tasks:
+            for task in todo_tasks:
+                task['employe'] = None
+            json.dump(todos, open(path, 'w'), indent=4)
+    # Supprimer l'employé de la liste des employés
     employes = json.load(open(path_employes))
-    for employee in employes:
-        if employee["email"] == email: 
-            employes.remove(employee)
-            json.dump(employes, open(path_employes, 'w'))
-            break
-    return redirect(url_for("confirm_delete", email=email))
+    employes = [employee for employee in employes if employee["email"] != email]
+    json.dump(employes, open(path_employes, 'w'))
+    
+    flash("Employee '{}' deleted successfully.".format(email), "success")
+    return redirect("/employees")
 
-@app.route("/confirm_delete/<email>")
-def confirm_delete(email):
-    return render_template("confirm_delete.html", email=email)    
-    # # This can include deleting associated tasks, etc.
-    # return "Employee with email {} has been deleted.".format(email)
-    # return redirect("/employees")
 app.run(port=8080)
