@@ -311,30 +311,7 @@ def edit_employee(email):
     # Affichage du formulaire d'édition avec les données de l'employé
     return render_template("edit_employee.html", employee=employee_to_edit)
 
-# @app.route('/employees/delete/<email>', methods=['GET'])
-# def delete_employee(email):
-#     todos = json.load(open(path))
-#     employe_tasks = [task for task in todos if task.get('employe') and task['employe'].get('email') == email]
-#     # Vérifier s'il y a des tâches assignées à l'employé
-#     if employe_tasks:
-#         todo_tasks = [task for task in employe_tasks if task['statut'] == 'en cours']
-#         if todo_tasks:
-#             flash("Cannot delete employee '{}' because they have tasks in progress.".format(email), "error")
-#             return redirect("/employees")
-#         # S'il y a des tâches "en cours" assignées, les désassigner.
-#         if todo_tasks:
-#             for task in todo_tasks:
-#                 task['employe'] = None
-#             json.dump(todos, open(path, 'w'), indent=4)
-#     # Supprimer l'employé de la liste des employés
-#     employes = json.load(open(path_employes))
-#     employes = [employee for employee in employes if employee["email"] != email]
-#     json.dump(employes, open(path_employes, 'w'))
-    
-#     flash("Employee '{}' deleted successfully.".format(email), "success")
-#     return redirect("/employees")
-
-
+# Supprimer Emplyee (désassignée Tache)
 @app.route('/employees/delete/<email>', methods=['GET'])
 def delete_employee(email):
     # Charger les tâches à partir du fichier JSON
